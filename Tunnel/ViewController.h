@@ -11,5 +11,9 @@
 @interface ViewController : UIViewController
 
 
+- (IBAction)setup;
+
+- (IBAction)start;
+
 @end
 
