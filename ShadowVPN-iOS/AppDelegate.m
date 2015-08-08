@@ -7,8 +7,7 @@
 //
 
 #import "AppDelegate.h"
-#import "crypto.h"
-
+#import "ViewController.h"
 
 @interface AppDelegate ()
 
@@ -17,6 +16,15 @@
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window.backgroundColor = [UIColor whiteColor];
+    
+    ViewController *viewController = [[ViewController alloc] init];
+    UINavigationController *nvc = [[UINavigationController alloc] initWithRootViewController:viewController];
+    
+    self.window.rootViewController = nvc;
+    
+    [self.window makeKeyAndVisible];
     return YES;
 }
 

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="8164.2" systemVersion="14E46" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8135.1"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController">
+            <connections>
+                <outlet property="_connectButton" destination="Bwj-66-MFf" id="uTE-B1-Zge"/>
+                <outlet property="_connectCell" destination="Vhf-ex-sCn" id="Jwl-F9-q3d"/>
+                <outlet property="_tableView" destination="jAd-Eq-07F" id="D4Q-CZ-Rhg"/>
+                <outlet property="view" destination="iN0-l3-epB" id="KjD-4F-acD"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="grouped" separatorStyle="default" rowHeight="44" sectionHeaderHeight="10" sectionFooterHeight="10" translatesAutoresizingMaskIntoConstraints="NO" id="jAd-Eq-07F">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                    <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="rwo-RF-5q9"/>
+                        <outlet property="delegate" destination="-1" id="PXd-CJ-GX5"/>
+                    </connections>
+                </tableView>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="jAd-Eq-07F" secondAttribute="trailing" id="NVn-J0-hwN"/>
+                <constraint firstAttribute="bottom" secondItem="jAd-Eq-07F" secondAttribute="bottom" id="Vta-ix-oRB"/>
+                <constraint firstItem="jAd-Eq-07F" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="tEN-5F-fA7"/>
+                <constraint firstItem="jAd-Eq-07F" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="wZv-F7-tHw"/>
+            </constraints>
+            <point key="canvasLocation" x="523" y="365"/>
+        </view>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="Vhf-ex-sCn">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="Vhf-ex-sCn" id="Tv7-ed-w6B">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="43.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <button opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Bwj-66-MFf" customClass="KDEasyTouchButton">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="43.5"/>
+                        <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                        <state key="normal" title="Connect">
+                            <color key="titleColor" red="1" green="0.14901960784313725" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                        </state>
+                        <state key="disabled" title="Connecting...">
+                            <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                        </state>
+                    </button>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="Bwj-66-MFf" firstAttribute="top" secondItem="Tv7-ed-w6B" secondAttribute="top" id="4GL-GE-kuZ"/>
+                    <constraint firstAttribute="bottom" secondItem="Bwj-66-MFf" secondAttribute="bottom" id="FA0-b0-O6n"/>
+                    <constraint firstAttribute="trailing" secondItem="Bwj-66-MFf" secondAttribute="trailing" id="PZi-2e-FTi"/>
+                    <constraint firstItem="Bwj-66-MFf" firstAttribute="leading" secondItem="Tv7-ed-w6B" secondAttribute="leading" id="TMD-6c-4o4"/>
+                </constraints>
+            </tableViewCellContentView>
+            <point key="canvasLocation" x="189" y="499"/>
+        </tableViewCell>
+    </objects>
+</document>

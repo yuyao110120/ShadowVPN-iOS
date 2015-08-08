@@ -7,119 +7,209 @@
 //
 
 #import "PacketTunnelProvider.h"
+#import "ShadowVPNCrypto.h"
+#import "IPv4Packet.h"
+#import "UDPPacket.h"
+#import "DNSPacket.h"
+#import "SettingsModel.h"
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <unistd.h>
-
-#include <sys/select.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <net/if.h>
-#include <netinet/ip.h>
-#include <sys/uio.h>
-
-#import "crypto.h"
-
-#define SHADOWVPN_ZERO_BYTES 32
-#define SHADOWVPN_OVERHEAD_LEN 24
-#define SHADOWVPN_PACKET_OFFSET 8
-#define SHADOWVPN_MTU 1440
+static NSString * const kShadowVPNTunnelProviderErrorDomain = @"kShadowVPNTunnelProviderErrorDomain";
 
 @implementation PacketTunnelProvider {
     NWUDPSession *_UDPSession;
+    NSUserDefaults *_sharedDefaults;
     
-    void (^_startCompletionHandler)(NSError * __nullable error);
+    NSString *_hostIPAddress;
+    NSMutableArray *_outgoingBuffer;
+    
+    dispatch_queue_t _dispatchQueue;
+    SettingsModel *_settings;
 }
 
-- (void)startTunnelWithOptions:(nullable NSDictionary<NSString *,NSObject *> *)options completionHandler:(void (^)(NSError * __nullable error))completionHandler {
-    const char *password = self.protocolConfiguration.username.UTF8String;
+- (void)startTunnelWithOptions:(nullable NSDictionary<NSString *,NSObject *> *)options
+             completionHandler:(void (^)(NSError * __nullable error))completionHandler {
+    NSString *groupContainerPath = [[NSFileManager defaultManager]
+                                    containerURLForSecurityApplicationGroupIdentifier:
+                                    kAppGroupIdentifier].path;
+    KDLoggerSetLogFilePath([groupContainerPath stringByAppendingPathComponent:@"log.txt"]);
+    KDLoggerInstallUncaughtExceptionHandler();
     
-    crypto_init();
-    crypto_set_password(password, strlen(password));
+    KDClassLog(@"Starting tunnel...");
+    _outgoingBuffer = [NSMutableArray arrayWithCapacity:100];
+    _dispatchQueue = dispatch_queue_create("manager", NULL);
     
-    NSArray *host = [self.protocolConfiguration.serverAddress componentsSeparatedByString:@":"];
-    
-    NWHostEndpoint *endpoint = [NWHostEndpoint endpointWithHostname:host[0] port:host[1]];
-    
-    _UDPSession = [self createUDPSessionToEndpoint:endpoint fromEndpoint:nil];
-    
-    [_UDPSession addObserver:self
-                  forKeyPath:@"state"
-                     options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionInitial
-                     context:NULL];
-    
-    [_UDPSession setReadHandler:^(NSArray<NSData *> *datagrams, NSError *error) {
-        NSLog(@"Received UDP packet");
-        if (error) {
-            NSLog(@"Error when UDP session read: %@", error);
-        } else {
-            [self processUDPIncomingDatagrams:datagrams];
+    dispatch_async(_dispatchQueue, ^{
+        [self addObserver:self
+                      forKeyPath:@"defaultPath"
+                         options:0
+                         context:NULL];
+        
+        _settings = [SettingsModel settingsFromAppGroupContainer];
+        KDClassLog(@"Settings: %@", _settings.dictionaryValue);
+
+        [ShadowVPNCrypto setPassword:_settings.password];
+        
+        NSArray *result = [[self class] dnsResolveWithHost:_settings.hostname];
+        if (result.count == 0) {
+            NSError *error = [NSError errorWithDomain:kShadowVPNTunnelProviderErrorDomain code:2 userInfo:@{NSLocalizedDescriptionKey: @"DNS failed!"}];
+            completionHandler(error);
+            return;
         }
-    } maxDatagrams:NSUIntegerMax];
+        _hostIPAddress = result.firstObject;
+        KDClassLog(@"Server DNS Result: %@", _hostIPAddress);
+        
+        NEPacketTunnelNetworkSettings *settings = [self prepareTunnelNetworkSettings];
+        
+        KDUtilDefineWeakSelfRef
+        [self setTunnelNetworkSettings:settings completionHandler:^(NSError * __nullable error) {
+            if (error)  {
+                KDLog(NSStringFromClass([weakSelf class]), @"Error occurred while setTunnelNetworkSettings: %@", error);
+                completionHandler(error);
+            } else {
+                completionHandler(nil);
+                [weakSelf setupUDPSession];
+                [weakSelf readTun];
+            }
+        }];
+    });
+}
+
+- (NEPacketTunnelNetworkSettings *)prepareTunnelNetworkSettings {
+    NEPacketTunnelNetworkSettings *settings = [[NEPacketTunnelNetworkSettings alloc] initWithTunnelRemoteAddress:_hostIPAddress];
+    settings.IPv4Settings = [[NEIPv4Settings alloc] initWithAddresses:@[_settings.clientIP]
+                                                          subnetMasks:@[_settings.subnetMasks]];
     
-    _startCompletionHandler = completionHandler;
+    RoutingMode routingMode = _settings.routingMode;
+    if (routingMode == RoutingModeChnroute) {
+        [self setupChnroute:settings.IPv4Settings];
+    } else if (routingMode == RoutingModeBestroutetb) {
+        [self setupBestroutetb:settings.IPv4Settings];
+    } else {
+        settings.IPv4Settings.includedRoutes = @[[NEIPv4Route defaultRoute]];
+    }
+    
+    settings.DNSSettings = [[NEDNSSettings alloc] initWithServers:@[_settings.DNS]];
+    settings.MTU = @(_settings.MTU);
+
+    return settings;
+}
+
+- (void)setupUDPSession {
+    dispatch_async(_dispatchQueue, ^{
+        if (_UDPSession) return;
+        KDClassLog(@"Creating UDP Session...");
+        NWHostEndpoint *endpoint = [NWHostEndpoint endpointWithHostname:_hostIPAddress
+                                                                   port:[NSString stringWithFormat:@"%u", _settings.port]];
+        
+        _UDPSession = [self createUDPSessionToEndpoint:endpoint fromEndpoint:nil];
+        
+        [_UDPSession addObserver:self
+                      forKeyPath:@"state"
+                         options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionInitial
+                         context:NULL];
+        
+        KDUtilDefineWeakSelfRef
+        [_UDPSession setReadHandler:^(NSArray<NSData *> *datagrams, NSError *error) {
+            if (error) {
+                KDLog(NSStringFromClass([weakSelf class]), @"Error when UDP session read: %@", error);
+            } else {
+                [weakSelf processUDPIncomingDatagrams:datagrams];
+            }
+        } maxDatagrams:NSUIntegerMax];
+    });
+}
+
+- (void)releaseUDPSession {
+    KDClassLog(@"releaseUDPSession");
+    dispatch_async(_dispatchQueue, ^{
+        [_UDPSession removeObserver:self forKeyPath:@"state"];
+        _UDPSession = nil;
+    });
 }
 
 - (void)observeValueForKeyPath:(nullable NSString *)keyPath
                       ofObject:(nullable id)object
                         change:(nullable NSDictionary<NSString *,id> *)change
                        context:(nullable void *)context {
-    if (object == _UDPSession) {
-        NSLog(@"KVO %@: %@", keyPath, change[NSKeyValueChangeNewKey]);
-        
-        if ([keyPath isEqualToString:@"state"] && _UDPSession.state == NWUDPSessionStateReady) {
-            
-            NEPacketTunnelNetworkSettings *settings = [[NEPacketTunnelNetworkSettings alloc] initWithTunnelRemoteAddress:@"203.66.65.7"];
-            
-            settings.IPv4Settings = [[NEIPv4Settings alloc] initWithAddresses:@[@"10.7.0.2"]
-                                                                  subnetMasks:@[@"255.255.255.0"]];
-            
-            settings.IPv4Settings.includedRoutes = @[[NEIPv4Route defaultRoute]];
-            settings.DNSSettings = [[NEDNSSettings alloc] initWithServers:@[@"8.8.8.8"]];
-            
-            settings.MTU = @(SHADOWVPN_MTU);
-            
-            [self setTunnelNetworkSettings:settings completionHandler:^(NSError * __nullable error) {
-                NSLog(@"Error when setTunnelNetworkSettings: %@", error);
-                
-                _startCompletionHandler(nil);
-                _startCompletionHandler = nil;
-                
-                [self readTun];
-            }];
+    if (object == _UDPSession && [keyPath isEqualToString:@"state"]) {
+        KDClassLog(@"UDP Session state changed: %d", (int)_UDPSession.state);
+        if (_UDPSession.state == NWUDPSessionStateReady) {
+            [self processOutgoingBuffer];
+        } else if (_UDPSession.state == NWUDPSessionStateFailed || _UDPSession.state == NWUDPSessionStateCancelled)  {
+            [self releaseUDPSession];
         }
-        
+    } else if (object == self && [keyPath isEqualToString:@"defaultPath"]) {
+        KDClassLog(@"KVO defaultPath: %@", self.defaultPath);
     } else {
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
 }
 
+- (void)processOutgoingBuffer {
+    dispatch_async(_dispatchQueue, ^{
+        if (!_UDPSession) {
+            [self setupUDPSession];
+            return;
+        }
+        if (_UDPSession.state != NWUDPSessionStateReady) {
+            return;
+        }
+        
+        NSArray *datas;
+        @synchronized(_outgoingBuffer) {
+            if (_outgoingBuffer.count == 0) return;
+            datas = [_outgoingBuffer copy];
+            [_outgoingBuffer removeAllObjects];
+        }
+        
+        [_UDPSession writeMultipleDatagrams:datas completionHandler:^(NSError * _Nullable error) {
+            if (error){
+                KDClassLog(@"Write UDP error: %@", error);
+                @synchronized(_outgoingBuffer) {
+                    [_outgoingBuffer addObjectsFromArray:datas];
+                }
+                [self releaseUDPSession];
+                [self setupUDPSession];
+            }
+        }];
+    });
+}
+
 - (void)readTun {
     [self.packetFlow readPacketsWithCompletionHandler:^(NSArray<NSData *> * __nonnull packets, NSArray<NSNumber *> * __nonnull protocols) {
         
+        NSMutableArray *datas = [NSMutableArray arrayWithCapacity:packets.count];
         [packets enumerateObjectsUsingBlock:^(NSData * data, NSUInteger idx, BOOL * stop) {
-            int p = [protocols[idx] intValue];
-            if (p != AF_INET) return;
-            const char *bytes = data.bytes;
-            char type = *(bytes + 9);
+            if ([protocols[idx] intValue] != AF_INET) return;
             
-            NSLog(@"Tun incoming data: %x", type);
+            IPv4Packet *packet = [[IPv4Packet alloc] initWithPacketData:data];
             
-            NSData *encryptedData = [self encryptOutgoingPacket:data];
-            NSLog(@"Encrypt %lu --> %lu", (unsigned long)data.length, (unsigned long)encryptedData.length);
+            UDPPacket *udp = packet.payloadPacket;
+            if (udp && udp.destinationPort == 53) {
+                DNSPacket *dns = [[DNSPacket alloc] initWithPacketData:udp.payloadData];
+                
+                KDClassLog(@"DNS Query: %@", dns.queryDomains);
+            }
             
-            [_UDPSession writeDatagram:encryptedData completionHandler:^(NSError * __nullable error) {
-                if (error) NSLog(@"Write UDP error: %@", error);
-            }];
+//            struct in_addr ip_addr;
+//            ip_addr.s_addr = packet.destinationIP;
+//            KDClassLog(@"Protocol: %X --> %s", packet.protocol, inet_ntoa(ip_addr));
+            
+            NSData *encryptedData = [ShadowVPNCrypto encryptData:data];
+            if (!encryptedData) {
+                KDClassLog(@"Encrypt failed: %@", data);
+                return;
+            }
+            
+            [datas addObject:encryptedData];
+
         }];
-    
         [self readTun];
+        
+        dispatch_async(_dispatchQueue, ^{
+            [_outgoingBuffer addObjectsFromArray:datas];
+            [self processOutgoingBuffer];
+        });
     }];
 }
 
@@ -128,11 +218,14 @@
     NSMutableArray *protocols = [NSMutableArray arrayWithCapacity:datagrams.count];
     
     for (NSData *data in datagrams) {
-        NSData *decryptedData = [self decryptIncomingPacket:data];
+        NSData *decryptedData = [ShadowVPNCrypto decryptData:data];
+        if (!decryptedData) {
+            KDClassLog(@"Decrypt failed! Data length: %lu", (unsigned long)data.length);
+            KDClassLog(@"%@", [data base64EncodedStringWithOptions:0]);
+            return;
+        }
+        
         [result addObject:decryptedData];
-        
-        NSLog(@"Decrypt %lu --> %lu", (unsigned long)data.length, (unsigned long)decryptedData.length);
-        
         [protocols addObject:@(AF_INET)];
     }
     
@@ -140,51 +233,91 @@
 }
 
 - (void)stopTunnelWithReason:(NEProviderStopReason)reason completionHandler:(void (^)(void))completionHandler {
-    NSLog(@"NEProviderStopReason: %ld", (long)reason);
+    KDClassLog(@"NEProviderStopReason: %ld", (long)reason);
     completionHandler();
 }
 
 - (void)cancelTunnelWithError:(nullable NSError *)error {
-    NSLog(@"cancelTunnelWithError: %@", error);
+    KDClassLog(@"cancelTunnelWithError: %@", error);
 }
 
 - (void)handleAppMessage:(NSData *)messageData completionHandler:(nullable void (^)(NSData * __nullable responseData))completionHandler {
-    NSLog(@"handleAppMessage: %@", messageData);
+    KDClassLog(@"handleAppMessage: %@", messageData);
+    completionHandler(nil);
 }
 
-static unsigned char *inBuffer;
-static unsigned char *outBuffer;
-
-static void initBuffer() {
-    if (!inBuffer) {
-        inBuffer = malloc(4000);
-        outBuffer = malloc(4000);
++ (NSArray *)dnsResolveWithHost:(NSString *)host {
+    CFHostRef hostRef = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)host);
+    Boolean result = CFHostStartInfoResolution(hostRef, kCFHostAddresses, NULL);
+    if (result) {
+        CFArrayRef addresses = CFHostGetAddressing(hostRef, &result);
+        
+        NSMutableArray *resultArray = [[NSMutableArray alloc] init];
+        for(int i = 0; i < CFArrayGetCount(addresses); i++){
+            CFDataRef saData = (CFDataRef)CFArrayGetValueAtIndex(addresses, i);
+            struct sockaddr_in *remoteAddr = (struct sockaddr_in*)CFDataGetBytePtr(saData);
+            
+            if (remoteAddr != NULL){
+                NSString *str =[NSString stringWithCString:inet_ntoa(remoteAddr->sin_addr) encoding:NSASCIIStringEncoding];
+                [resultArray addObject:str];
+            }
+        }
+        CFRelease(hostRef);
+        return resultArray;
+    } else {
+        CFRelease(hostRef);
+        return nil;
     }
 }
 
-- (NSData *)encryptOutgoingPacket:(NSData *)data {
-    initBuffer();
-    memcpy(inBuffer + SHADOWVPN_ZERO_BYTES, data.bytes, data.length);
-
-    int result = crypto_encrypt(outBuffer, inBuffer, data.length);
-    if (result != 0) return nil;
+- (void)setupChnroute:(NEIPv4Settings *)settings {
+    NSString *data = [NSString stringWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"chnroutes" ofType:@"txt"] encoding:NSUTF8StringEncoding error:nil];
     
-    NSData *resultData = [NSData dataWithBytes:outBuffer + SHADOWVPN_PACKET_OFFSET length:SHADOWVPN_OVERHEAD_LEN + data.length];
+    NSMutableArray *routes = [NSMutableArray array];
+    [data enumerateLinesUsingBlock:^(NSString * line, BOOL * stop) {
+        NSArray *comps = [line componentsSeparatedByString:@" "];
+        NEIPv4Route *route = [[NEIPv4Route alloc] initWithDestinationAddress:comps[0] subnetMask:comps[1]];
+        [routes addObject:route];
+    }];
     
-    return resultData;
+    KDClassLog(@"chnroute: %lu", (unsigned long)routes.count);
+    
+    settings.excludedRoutes = routes;
+    settings.includedRoutes = @[[NEIPv4Route defaultRoute]];
 }
 
-- (NSData *)decryptIncomingPacket:(NSData *)data {
-    initBuffer();
-    memcpy(inBuffer + SHADOWVPN_PACKET_OFFSET, data.bytes, data.length);
+- (void)setupBestroutetb:(NEIPv4Settings *)settings {
+    NSString *data = [NSString stringWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"bestroutetb" ofType:@"txt"] encoding:NSUTF8StringEncoding error:nil];
     
-    crypto_decrypt(outBuffer, inBuffer, data.length - SHADOWVPN_OVERHEAD_LEN);
+    NSMutableArray *excludedRoutes = [NSMutableArray array];
+    NSMutableArray *includedRoutes = [NSMutableArray array];
+
+    [data enumerateLinesUsingBlock:^(NSString * line, BOOL * stop) {
+        NSArray *comps = [line componentsSeparatedByString:@" "];
+        NEIPv4Route *route = [[NEIPv4Route alloc] initWithDestinationAddress:comps[0] subnetMask:comps[1]];
+        
+        if ([comps[2] isEqual:@"vpn_gateway"]) {
+            [includedRoutes addObject:route];
+        } else {
+            [excludedRoutes addObject:route];
+        }
+    }];
     
-    NSData *resultData =  [NSData dataWithBytes:outBuffer + SHADOWVPN_ZERO_BYTES length:data.length - SHADOWVPN_OVERHEAD_LEN];
+    [includedRoutes addObject:[NEIPv4Route defaultRoute]];
     
-    return resultData;
+    KDClassLog(@"bestroutetb: includedRoutes %lu, excludedRoutes %lu", (unsigned long)includedRoutes.count, (unsigned long)excludedRoutes.count);
+    
+    settings.excludedRoutes = excludedRoutes;
+    settings.includedRoutes = includedRoutes;
 }
 
+- (void)sleepWithCompletionHandler:(void (^)(void))completionHandler {
+    KDClassLog(@"sleepWithCompletionHandler");
+    completionHandler();
+}
 
+- (void)wake {
+    KDClassLog(@"wake");
+}
 
 @end

@@ -1,0 +1,30 @@
+//
+//  PrefixHeader.pch
+//  ShadowVPN-iOS
+//
+//  Created by Blankwonder on 8/7/15.
+//  Copyright © 2015 Yach. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+#ifdef __OBJC__
+
+@import NetworkExtension;
+
+#import <sys/socket.h>
+#import <ifaddrs.h>
+#import <arpa/inet.h>
+#import <netdb.h>
+
+#import "Constant.h"
+
+#import "KDLogger.h"
+#import "KDUtilities.h"
+
+
+
+#endif
+
+#endif /* PrefixHeader_pch */

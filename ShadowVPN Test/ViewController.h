@@ -1,8 +1,8 @@
 //
 //  ViewController.h
-//  Tunnel
+//  ShadowVPN Test
 //
-//  Created by blankwonder on 7/16/15.
+//  Created by Blankwonder on 8/7/15.
 //  Copyright © 2015 Yach. All rights reserved.
 //
 
@@ -10,10 +10,6 @@
 
 @interface ViewController : UIViewController
 
-
-- (IBAction)setup;
-
-- (IBAction)start;
 
 @end
 
