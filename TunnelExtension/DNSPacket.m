@@ -16,6 +16,8 @@
         if (data.length < 12) return nil;
         const u_int16_t *bytes = data.bytes;
         
+        _identifier = *((u_int16_t *)data.bytes);
+
         u_int16_t count = ntohs(*(bytes + 2));
         
         NSMutableArray *domains = [NSMutableArray arrayWithCapacity:count];
@@ -46,6 +48,7 @@
         }
         
         _queryDomains = domains;
+        _rawData = data;
     }
     return self;
 }

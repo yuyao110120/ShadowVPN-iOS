@@ -8,11 +8,20 @@
 
 #import "SettingsModel.h"
 #import "KDLogger.h"
+#import "KDUtilities.h"
+#import <arpa/inet.h>
+
+NSString * const SettingsModelErrorDomain = @"SettingsModelErrorDomain";
 
 #define kConfigurationKey @"Configuration"
 
-#define kConfigurationAllKeyArray @[kConfigurationKeyHostname, kConfigurationKeyPort, kConfigurationKeyPassword, kConfigurationKeyClientIP, kConfigurationKeySubnetMasks, kConfigurationKeyDNS, kConfigurationKeyMTU, kConfigurationKeyRoutingMode]
-
+BOOL IsStringValidIPAddress(NSString *IPAddress) {
+    if (!KDUtilIsStringValid(IPAddress)) return NO;
+    struct in_addr pin;
+    int success = inet_aton([IPAddress UTF8String], &pin);
+    if (success == 1) return TRUE;
+    return NO;
+}
 
 @implementation SettingsModel
 
@@ -37,5 +46,48 @@
     [sharedDefaults synchronize];
 }
 
+- (BOOL)validateValue:(inout id __nullable * __nonnull)ioValue forKey:(NSString *)inKey error:(out NSError **)outError {    
+    void (^setError)() = ^{
+        *outError = [NSError errorWithDomain:SettingsModelErrorDomain code:1 userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Invalid value for key: %@", inKey]}];
+    };
+
+    
+    if ([@[@"clientIP", @"subnetMasks", @"DNS"] containsObject:inKey]) {
+        id str = *ioValue;
+        if (IsStringValidIPAddress(str)) {
+            return YES;
+        } else {
+            setError();
+            return NO;
+        }
+    } else if ([inKey isEqualToString:@"hostname"] || [inKey isEqualToString:@"password"]) {
+        id str = *ioValue;
+        if (KDUtilIsStringValid(str)) {
+            return YES;
+        } else {
+            setError();
+            return NO;
+        }
+    } else if ([inKey isEqualToString:@"port"] || [inKey isEqualToString:@"MTU"]) {
+        NSNumber *val = *ioValue;
+        if (val.intValue > 0) {
+            return YES;
+        } else {
+            setError();
+            return NO;
+        }
+    } else if ([inKey isEqualToString:@"chinaDNS"]) {
+        NSString *str = *ioValue;
+        if (str.length == 0) return YES;
+        if (IsStringValidIPAddress(str)) {
+            return YES;
+        } else {
+            setError();
+            return NO;
+        }
+    } else {
+        return YES;
+    }
+}
 
 @end

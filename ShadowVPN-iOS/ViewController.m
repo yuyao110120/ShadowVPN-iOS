@@ -13,6 +13,7 @@
 #import "LoggerViewController.h"
 #import "SettingsModel.h"
 #import "KDLogger.h"
+#import "KDAlertView.h"
 
 #define kRoutingModeTitles @[@"All", @"chnroute", @"bestroutetb"]
 
@@ -66,7 +67,8 @@
     _routingCell.detailTextLabel.text = kRoutingModeTitles[settings.routingMode];
     
     _textFieldCells = @[@[newCell(@"Host"), newCell(@"Port"), newCell(@"Password")],
-                        @[newCell(@"Client IP"), newCell(@"Subnet Masks"), newCell(@"DNS"), newCell(@"MTU")],
+                        @[newCell(@"Client IP"), newCell(@"Subnet Masks"), newCell(@"MTU")],
+                        @[newCell(@"Global DNS"), newCell(@"China DNS")],
                         @[_routingCell]];
     _textFields = textFields;
     
@@ -75,36 +77,29 @@
     [textFields[2] setPlaceholder:@"Password"];
     [textFields[3] setPlaceholder:@"Default: 10.7.0.2"];
     [textFields[4] setPlaceholder:@"Default: 255.255.255.0"];
-    [textFields[5] setPlaceholder:@"DNS Server Address"];
-    [textFields[6] setPlaceholder:@"Default: 1400"];
+    [textFields[5] setPlaceholder:@"Default: 1400"];
+    [textFields[6] setPlaceholder:@"DNS Server Address"];
+    [textFields[7] setPlaceholder:@"Empty to Use System DNS"];
     
+    [textFields[0] setKeyboardType:UIKeyboardTypeASCIICapable];
     [textFields[1] setKeyboardType:UIKeyboardTypeNumberPad];
+    [textFields[2] setKeyboardType:UIKeyboardTypeASCIICapable];
     [textFields[3] setKeyboardType:UIKeyboardTypeDecimalPad];
     [textFields[4] setKeyboardType:UIKeyboardTypeDecimalPad];
-    [textFields[5] setKeyboardType:UIKeyboardTypeDecimalPad];
-    [textFields[6] setKeyboardType:UIKeyboardTypeNumberPad];
+    [textFields[5] setKeyboardType:UIKeyboardTypeNumberPad];
+    [textFields[6] setKeyboardType:UIKeyboardTypeDecimalPad];
+    [textFields[7] setKeyboardType:UIKeyboardTypeDecimalPad];
     
-    if (settings) {
-        [textFields[0] setText:settings.hostname];
-        [textFields[1] setText:[NSString stringWithFormat:@"%u", settings.port]];
-        [textFields[2] setText:settings.password];
-        [textFields[3] setText:settings.clientIP];
-        [textFields[4] setText:settings.subnetMasks];
-        [textFields[5] setText:settings.DNS];
-        [textFields[6] setText:[NSString stringWithFormat:@"%u", settings.MTU]];
-    }
+    [textFields[0] setText:settings.hostname];
+    [textFields[1] setText:[NSString stringWithFormat:@"%u", settings.port ?: 1123]];
+    [textFields[2] setText:settings.password];
+    [textFields[3] setText:settings.clientIP ?: @"10.7.0.2"];
+    [textFields[4] setText:settings.subnetMasks ?: @"255.255.255.0"];
+    [textFields[5] setText:[NSString stringWithFormat:@"%u", settings.MTU ?: 1400]];
+    [textFields[6] setText:settings.DNS ?: @"8.8.8.8"];
+    [textFields[7] setText:settings.chinaDNS ?: @"223.5.5.5"];
     
-    self.editing = ![self isTextFieldsAllCompleted];
-    
-    if ([textFields[3] text].length == 0) {
-        [textFields[3] setText:@"10.7.0.2"];
-    }
-    if ([textFields[4] text].length == 0) {
-        [textFields[4] setText:@"255.255.255.0"];
-    }
-    if ([textFields[5] text].length == 0) {
-        [textFields[5] setText:@"8.8.8.8"];
-    }
+    self.editing = ![settings validate:nil];
     
     [NETunnelProviderManager loadAllFromPreferencesWithCompletionHandler:^(NSArray<NETunnelProviderManager *> * managers, NSError * error) {
         if (managers.count > 0) {
@@ -140,15 +135,6 @@
 
 KDUtilRemoveNotificationCenterObserverDealloc
 
-- (BOOL)isTextFieldsAllCompleted {
-    for (UITextField *textFiled in _textFields) {
-        if (textFiled.text.length == 0) {
-            return NO;
-        }
-    }
-    return YES;
-}
-
 - (void)setEditing:(BOOL)editing {
     _editing = editing;
     
@@ -174,7 +160,6 @@ KDUtilRemoveNotificationCenterObserverDealloc
 }
 
 - (void)textFieldTextDidChange {
-    self.navigationItem.rightBarButtonItem.enabled = [self isTextFieldsAllCompleted];
 }
 
 - (void)startEditing {
@@ -183,25 +168,28 @@ KDUtilRemoveNotificationCenterObserverDealloc
 }
 
 - (void)editingDone {
-    BOOL completed = [self isTextFieldsAllCompleted];
-
-    if (completed) {
-        [self setEditing:NO];
-        
-        SettingsModel *settings = [SettingsModel settingsFromAppGroupContainer];
-        
-        settings.hostname = [_textFields[0] text];
-        settings.port =  [[_textFields[1] text] intValue];
-        settings.password = [_textFields[2] text];
-        settings.clientIP = [_textFields[3] text];
-        settings.subnetMasks = [_textFields[4] text];
-        settings.DNS = [_textFields[5] text];
-        settings.MTU = [[_textFields[6] text] intValue];
-        settings.routingMode = (int)[kRoutingModeTitles indexOfObject:_routingCell.detailTextLabel.text];
+    SettingsModel *settings = [[SettingsModel alloc] init];
     
+    settings.hostname = [_textFields[0] text];
+    settings.port =  [[_textFields[1] text] intValue];
+    settings.password = [_textFields[2] text];
+    settings.clientIP = [_textFields[3] text];
+    settings.subnetMasks = [_textFields[4] text];
+    settings.MTU = [[_textFields[5] text] intValue];
+    settings.DNS = [_textFields[6] text];
+    settings.chinaDNS = [_textFields[7] text] ?: @"";
+
+    settings.routingMode = (int)[kRoutingModeTitles indexOfObject:_routingCell.detailTextLabel.text];
+    
+    NSError *error = nil;
+    if ([settings validate:&error]) {
         [SettingsModel saveSettingsToAppGroupContainer:settings];
         
         KDClassLog(@"New settings saved: %@", settings.dictionaryValue);
+        [self setEditing:NO];
+    } else {
+        [KDAlertView showMessage:error.localizedDescription
+               cancelButtonTitle:@"OK"];
     }
 }
 

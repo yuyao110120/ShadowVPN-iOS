@@ -12,6 +12,8 @@
 
 - (instancetype)initWithPacketData:(NSData *)data;
 
+@property (nonatomic, readonly) u_int16_t identifier;
 @property (nonatomic, readonly) NSArray *queryDomains;
+@property (nonatomic, readonly) NSData *rawData;
 
 @end

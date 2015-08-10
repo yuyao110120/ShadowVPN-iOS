@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		460AE25A1B7888D60050B7C5 /* DNSServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 460AE2591B7888D60050B7C5 /* DNSServer.m */; };
+		460AE2601B7889760050B7C5 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 460AE25D1B7889760050B7C5 /* GCDAsyncSocket.m */; };
+		460AE2611B7889760050B7C5 /* GCDAsyncUdpSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 460AE25F1B7889760050B7C5 /* GCDAsyncUdpSocket.m */; };
+		460AE2631B789CA30050B7C5 /* china_domains.txt in Resources */ = {isa = PBXBuildFile; fileRef = 460AE2621B789CA30050B7C5 /* china_domains.txt */; };
 		465A14D41B7367CA00B3F674 /* randombytes_sysrandom.c in Sources */ = {isa = PBXBuildFile; fileRef = 46883F921B7366C6001DE41F /* randombytes_sysrandom.c */; };
 		465A14D51B7367D800B3F674 /* randombytes_salsa20_random.c in Sources */ = {isa = PBXBuildFile; fileRef = 46883F901B7366C6001DE41F /* randombytes_salsa20_random.c */; };
 		4665F1F81B7501D70027BD4D /* EXTRuntimeExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4665F1D61B7501D70027BD4D /* EXTRuntimeExtensions.m */; };
@@ -236,7 +240,6 @@
 		46D0144C1B74543800BB8CF0 /* KDLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 46A928EF1B73206000E40132 /* KDLogger.m */; };
 		46D014551B74555200BB8CF0 /* LoggerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 46D014541B74555200BB8CF0 /* LoggerViewController.m */; };
 		46D014591B745A0300BB8CF0 /* UDPPacket.m in Sources */ = {isa = PBXBuildFile; fileRef = 46D014571B7457E000BB8CF0 /* UDPPacket.m */; };
-		46D0145D1B74630700BB8CF0 /* DNSClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 46D0145B1B74630400BB8CF0 /* DNSClient.m */; };
 		46D0146A1B7487AB00BB8CF0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 46D014691B7487AB00BB8CF0 /* main.m */; };
 		46D0146D1B7487AB00BB8CF0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 46D0146C1B7487AB00BB8CF0 /* AppDelegate.m */; };
 		46D014701B7487AB00BB8CF0 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 46D0146F1B7487AB00BB8CF0 /* ViewController.m */; };
@@ -400,6 +403,8 @@
 		46D4885A1B739DEC005A453E /* bestroutetb.txt in Resources */ = {isa = PBXBuildFile; fileRef = 46D488591B739DEC005A453E /* bestroutetb.txt */; };
 		46E552841B76171300B0E0C8 /* SettingsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 46E552831B76171300B0E0C8 /* SettingsModel.m */; };
 		46E552851B76171300B0E0C8 /* SettingsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 46E552831B76171300B0E0C8 /* SettingsModel.m */; };
+		46EC10D21B78A96900E7B3EF /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 46EC10D11B78A96900E7B3EF /* libresolv.tbd */; };
+		46EC10D51B78AF3300E7B3EF /* NetworkInterfaceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 46EC10D41B78AF3300E7B3EF /* NetworkInterfaceManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -427,6 +432,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		460AE2581B7888D60050B7C5 /* DNSServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DNSServer.h; sourceTree = "<group>"; };
+		460AE2591B7888D60050B7C5 /* DNSServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DNSServer.m; sourceTree = "<group>"; };
+		460AE25C1B7889760050B7C5 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncSocket.h; sourceTree = "<group>"; };
+		460AE25D1B7889760050B7C5 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncSocket.m; sourceTree = "<group>"; };
+		460AE25E1B7889760050B7C5 /* GCDAsyncUdpSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncUdpSocket.h; sourceTree = "<group>"; };
+		460AE25F1B7889760050B7C5 /* GCDAsyncUdpSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncUdpSocket.m; sourceTree = "<group>"; };
+		460AE2621B789CA30050B7C5 /* china_domains.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = china_domains.txt; sourceTree = "<group>"; };
 		4665F1D41B7501D70027BD4D /* EXTKeyPathCoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EXTKeyPathCoding.h; sourceTree = "<group>"; };
 		4665F1D51B7501D70027BD4D /* EXTRuntimeExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EXTRuntimeExtensions.h; sourceTree = "<group>"; };
 		4665F1D61B7501D70027BD4D /* EXTRuntimeExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EXTRuntimeExtensions.m; sourceTree = "<group>"; };
@@ -810,8 +822,6 @@
 		46D014541B74555200BB8CF0 /* LoggerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LoggerViewController.m; path = "ShadowVPN-iOS/LoggerViewController.m"; sourceTree = SOURCE_ROOT; };
 		46D014561B7457E000BB8CF0 /* UDPPacket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UDPPacket.h; sourceTree = "<group>"; };
 		46D014571B7457E000BB8CF0 /* UDPPacket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UDPPacket.m; sourceTree = "<group>"; };
-		46D0145A1B74630400BB8CF0 /* DNSClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DNSClient.h; sourceTree = "<group>"; };
-		46D0145B1B74630400BB8CF0 /* DNSClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DNSClient.m; sourceTree = "<group>"; };
 		46D0145E1B7463F900BB8CF0 /* PrefixHeader.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrefixHeader.pch; sourceTree = "<group>"; };
 		46D014661B7487AB00BB8CF0 /* ShadowVPN Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ShadowVPN Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		46D014691B7487AB00BB8CF0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -831,6 +841,9 @@
 		46E552811B76171300B0E0C8 /* Constant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constant.h; sourceTree = "<group>"; };
 		46E552821B76171300B0E0C8 /* SettingsModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsModel.h; sourceTree = "<group>"; };
 		46E552831B76171300B0E0C8 /* SettingsModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsModel.m; sourceTree = "<group>"; };
+		46EC10D11B78A96900E7B3EF /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
+		46EC10D31B78AF3300E7B3EF /* NetworkInterfaceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetworkInterfaceManager.h; sourceTree = "<group>"; };
+		46EC10D41B78AF3300E7B3EF /* NetworkInterfaceManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NetworkInterfaceManager.m; sourceTree = "<group>"; };
 		827DF95E91C11B795747C71C /* libPods-TunnelExtension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-TunnelExtension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F1C1EDC21080C93A8AB2759 /* libPods-Tunnel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Tunnel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B3A4AF103438FD83D4213B77 /* libPods-ShadowVPN-Tunnel-Extension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ShadowVPN-Tunnel-Extension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -849,6 +862,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				46EC10D21B78A96900E7B3EF /* libresolv.tbd in Frameworks */,
 				468840341B7366FF001DE41F /* NetworkExtension.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -863,6 +877,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		460AE25B1B7889760050B7C5 /* CocoaAsyncSocket */ = {
+			isa = PBXGroup;
+			children = (
+				460AE25C1B7889760050B7C5 /* GCDAsyncSocket.h */,
+				460AE25D1B7889760050B7C5 /* GCDAsyncSocket.m */,
+				460AE25E1B7889760050B7C5 /* GCDAsyncUdpSocket.h */,
+				460AE25F1B7889760050B7C5 /* GCDAsyncUdpSocket.m */,
+			);
+			path = CocoaAsyncSocket;
+			sourceTree = "<group>";
+		};
 		4665F1D21B7501D70027BD4D /* Mantle */ = {
 			isa = PBXGroup;
 			children = (
@@ -1869,6 +1894,9 @@
 		46A54A131B57A077006941AD /* TunnelExtension */ = {
 			isa = PBXGroup;
 			children = (
+				46EC10D31B78AF3300E7B3EF /* NetworkInterfaceManager.h */,
+				46EC10D41B78AF3300E7B3EF /* NetworkInterfaceManager.m */,
+				460AE2621B789CA30050B7C5 /* china_domains.txt */,
 				46D488591B739DEC005A453E /* bestroutetb.txt */,
 				466D84EF1B734BAA00675CC2 /* chnroutes.txt */,
 				46CFF4BA1B72FF0D00786BE1 /* ShadowVPN */,
@@ -1882,9 +1910,9 @@
 				46D014571B7457E000BB8CF0 /* UDPPacket.m */,
 				46D015571B74914A00BB8CF0 /* DNSPacket.h */,
 				46D015581B74914A00BB8CF0 /* DNSPacket.m */,
-				46D0145A1B74630400BB8CF0 /* DNSClient.h */,
-				46D0145B1B74630400BB8CF0 /* DNSClient.m */,
 				46D0145E1B7463F900BB8CF0 /* PrefixHeader.pch */,
+				460AE2581B7888D60050B7C5 /* DNSServer.h */,
+				460AE2591B7888D60050B7C5 /* DNSServer.m */,
 			);
 			path = TunnelExtension;
 			sourceTree = "<group>";
@@ -1892,6 +1920,7 @@
 		46A928D81B73206000E40132 /* Vendor */ = {
 			isa = PBXGroup;
 			children = (
+				460AE25B1B7889760050B7C5 /* CocoaAsyncSocket */,
 				4665F1D21B7501D70027BD4D /* Mantle */,
 				46883E3B1B7366C6001DE41F /* libsodium */,
 				46A928D91B73206000E40132 /* KDUtilities */,
@@ -2006,6 +2035,7 @@
 		65DF3B8170CEFE2F29F3B9D4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				46EC10D11B78A96900E7B3EF /* libresolv.tbd */,
 				827DF95E91C11B795747C71C /* libPods-TunnelExtension.a */,
 				8F1C1EDC21080C93A8AB2759 /* libPods-Tunnel.a */,
 				B3A4AF103438FD83D4213B77 /* libPods-ShadowVPN-Tunnel-Extension.a */,
@@ -2141,6 +2171,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				460AE2631B789CA30050B7C5 /* china_domains.txt in Resources */,
 				46D4885A1B739DEC005A453E /* bestroutetb.txt in Resources */,
 				46A54A251B57A0F8006941AD /* PacketTunnel.entitlements in Resources */,
 				466D84F01B734BAA00675CC2 /* chnroutes.txt in Resources */,
@@ -2260,6 +2291,7 @@
 				4665F2151B7501D70027BD4D /* NSObject+MTLComparisonAdditions.m in Sources */,
 				4665F1FF1B7501D70027BD4D /* MTLJSONAdapter.m in Sources */,
 				468840331B7366C6001DE41F /* version.c in Sources */,
+				460AE2611B7889760050B7C5 /* GCDAsyncUdpSocket.m in Sources */,
 				46D015591B74914A00BB8CF0 /* DNSPacket.m in Sources */,
 				4665F2131B7501D70027BD4D /* NSError+MTLModelException.m in Sources */,
 				468840001B7366C6001DE41F /* ge_precomp_0.c in Sources */,
@@ -2284,10 +2316,12 @@
 				4688401A1B7366C6001DE41F /* stream_salsa20_ref.c in Sources */,
 				46883FC21B7366C6001DE41F /* crypto_scrypt-common.c in Sources */,
 				4665F2111B7501D70027BD4D /* NSDictionary+MTLMappingAdditions.m in Sources */,
+				460AE2601B7889760050B7C5 /* GCDAsyncSocket.m in Sources */,
 				4688400A1B7366C6001DE41F /* fe25519_edwards25519sha512batch.c in Sources */,
 				46883FE81B7366C6001DE41F /* fe_invert.c in Sources */,
 				46883FEE1B7366C6001DE41F /* fe_sq.c in Sources */,
 				468840161B7366C6001DE41F /* stream_aes128ctr_api.c in Sources */,
+				46EC10D51B78AF3300E7B3EF /* NetworkInterfaceManager.m in Sources */,
 				46883FF31B7366C6001DE41F /* ge_double_scalarmult.c in Sources */,
 				46A54A231B57A0E9006941AD /* PacketTunnelProvider.m in Sources */,
 				468840141B7366C6001DE41F /* stream_aes128ctr.c in Sources */,
@@ -2337,7 +2371,6 @@
 				46883FC71B7366C6001DE41F /* pwhash_scryptsalsa208sha256_sse.c in Sources */,
 				4688401F1B7366C6001DE41F /* stream_salsa2012_api.c in Sources */,
 				468840201B7366C6001DE41F /* stream_salsa208.c in Sources */,
-				46D0145D1B74630700BB8CF0 /* DNSClient.m in Sources */,
 				46883FC61B7366C6001DE41F /* scrypt_platform.c in Sources */,
 				46883FCC1B7366C6001DE41F /* fe_0_curve25519_ref10.c in Sources */,
 				46883FE01B7366C6001DE41F /* shorthash_siphash24_api.c in Sources */,
@@ -2370,6 +2403,7 @@
 				468840171B7366C6001DE41F /* stream_chacha20_ref.c in Sources */,
 				46883FF71B7366C6001DE41F /* ge_p1p1_to_p2.c in Sources */,
 				46883FF91B7366C6001DE41F /* ge_p2_0.c in Sources */,
+				460AE25A1B7888D60050B7C5 /* DNSServer.m in Sources */,
 				4665F20B1B7501D70027BD4D /* NSArray+MTLManipulationAdditions.m in Sources */,
 				4665F2011B7501D70027BD4D /* MTLModel+NSCoding.m in Sources */,
 				4665F2071B7501D70027BD4D /* MTLTransformerErrorHandling.m in Sources */,

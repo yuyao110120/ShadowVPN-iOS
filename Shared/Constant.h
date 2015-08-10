@@ -11,10 +11,4 @@
 
 #define kAppGroupIdentifier @"group.ShadowVPN-iOS"
 
-typedef NS_ENUM(int, RoutingMode) {
-    RoutingModeAll = 0,
-    RoutingModeChnroute = 1,
-    RoutingModeBestroutetb =2
-};
-
 #endif /* Constant_h */

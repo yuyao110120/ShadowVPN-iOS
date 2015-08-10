@@ -75,7 +75,7 @@
 }
 
 - (void)scrollToBottom {
-    [_textView scrollRectToVisible:CGRectMake(0, _textView.contentSize.height - 1, 320, 1) animated:YES];
+    [_textView scrollRectToVisible:CGRectMake(0, _textView.contentSize.height - 1, _textView.contentSize.width, 1) animated:YES];
 }
 
 - (void)done {
